@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>KİTAP OKUMA VE ÖZET SİSTEMİ</title>
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    display:flex;
+    height:100vh;
+}
+
+/* SOL MENU */
+#menu{
+    width:250px;
+    background:black;
+    color:white;
+    padding:20px;
+}
+
+#menu h2{
+    color:white;
+    font-size:18px;
+}
+
+#menu button{
+    width:100%;
+    margin-top:10px;
+    padding:10px;
+    background:#333;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+
+#menu button:hover{
+    background:#555;
+}
+
+/* ORTA */
+#content{
+    flex:1;
+    padding:20px;
+    overflow:auto;
+}
+
+/* LOGIN */
+#login{
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:#111;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    color:white;
+}
+
+input, textarea, select{
+    padding:8px;
+    margin:5px;
+    width:250px;
+}
+
+textarea{
+    height:80px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+th, td{
+    border:1px solid #ccc;
+    padding:8px;
+    text-align:left;
+}
+
+th{
+    background:#eee;
+}
+
+.silBtn{
+    background:red;
+    color:white;
+    border:none;
+    padding:5px 10px;
+    cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div id="login">
+    <h2>GİRİŞ YAP</h2>
+    <input id="ad" placeholder="Ad">
+    <input id="soyad" placeholder="Soyad">
+    <input id="sifre" placeholder="Şifre">
+    <button onclick="giris()">Giriş Yap</button>
+    <p id="hata" style="color:red;"></p>
+</div>
+
+<div id="menu" style="display:none;">
+    <h2>KİTAP OKUMA VE ÖZET SİSTEMİ</h2>
+    <button onclick="anasayfa()">Ana Sayfa</button>
+    <button onclick="kitapOzet()">Kitap Özetleri</button>
+</div>
+
+<div id="content" style="display:none;"></div>
+
+<script>
+
+/* GİRİŞ */
+const kullanicilar = [
+    {ad:"Ayhan", soyad:"Sakallı", sifre:"344234"},
+    {ad:"Furkan Ufuk", soyad:"Sakallı", sifre:"344234"},
+    {ad:"Kağan Berat", soyad:"Sakallı", sifre:"344234"}
+];
+
+function giris(){
+    let a = document.getElementById("ad").value.trim();
+    let s = document.getElementById("soyad").value.trim();
+    let sif = document.getElementById("sifre").value.trim();
+
+    let dogru = kullanicilar.find(k => k.ad === a && k.soyad === s && k.sifre === sif);
+
+    if(dogru){
+        document.getElementById("login").style.display="none";
+        document.getElementById("menu").style.display="block";
+        document.getElementById("content").style.display="block";
+        anasayfa();
+    }else{
+        document.getElementById("hata").innerText="Bilgiler yanlış!";
+    }
+}
+
+/* ANA SAYFA */
+function anasayfa(){
+    document.getElementById("content").innerHTML =
+    "<h1 id='saat' style='font-size:40px;text-align:center;'></h1>";
+    saatGuncelle();
+}
+
+/* SAAT */
+function saatGuncelle(){
+    setInterval(function(){
+        let simdi = new Date();
+        document.getElementById("saat").innerText =
+        "TÜRKİYE TARİHİ: " +
+        simdi.toLocaleDateString("tr-TR") + " " +
+        simdi.toLocaleTimeString("tr-TR");
+    },1000);
+}
+
+/* KİTAP ÖZET */
+function kitapOzet(){
+    document.getElementById("content").innerHTML = `
+    <h2>Kitap Yayınla</h2>
+    Seviye:
+    <select id="seviye">
+        <option>Yetişkin</option>
+        <option>7.Sınıf</option>
+    </select><br>
+    Kitap Adı:<br>
+    <input id="kitapAd"><br>
+    Özet:<br>
+    <textarea id="ozet"></textarea><br>
+    <button onclick="yayinla()">Yayınla</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Seviye</th>
+                <th>Kitap Adı</th>
+                <th>Özet</th>
+                <th>Yayın Tarihi</th>
+                <th>Sil</th>
+            </tr>
+        </thead>
+        <tbody id="liste"></tbody>
+    </table>
+    `;
+    listele();
+}
+
+/* YAYINLA */
+function yayinla(){
+    let seviye = document.getElementById("seviye").value;
+    let kitapAd = document.getElementById("kitapAd").value;
+    let ozet = document.getElementById("ozet").value;
+
+    let tarih = new Date().toLocaleString("tr-TR");
+
+    let veri = JSON.parse(localStorage.getItem("kitaplar")) || [];
+
+    veri.push({seviye, kitapAd, ozet, tarih});
+
+    localStorage.setItem("kitaplar", JSON.stringify(veri));
+
+    listele();
+}
+
+/* LİSTELE */
+function listele(){
+    let veri = JSON.parse(localStorage.getItem("kitaplar")) || [];
+    let liste = document.getElementById("liste");
+    if(!liste) return;
+
+    liste.innerHTML="";
+
+    veri.forEach((k, index)=>{
+        liste.innerHTML += `
+        <tr>
+            <td>${k.seviye}</td>
+            <td>${k.kitapAd}</td>
+            <td>${k.ozet}</td>
+            <td>${k.tarih}</td>
+            <td><button class="silBtn" onclick="sil(${index})">Sil</button></td>
+        </tr>
+        `;
+    });
+}
+
+/* SİL */
+function sil(index){
+    let veri = JSON.parse(localStorage.getItem("kitaplar")) || [];
+    veri.splice(index,1);
+    localStorage.setItem("kitaplar", JSON.stringify(veri));
+    listele();
+}
+
+</script>
+
+</body>
+</html>
